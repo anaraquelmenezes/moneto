@@ -59,7 +59,7 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
 .login-logo { width:200px; margin-bottom:8px; }
 .login-sub { color:var(--texto-sub); font-size:14px; margin-bottom:20px; }
 .login-mascote { margin:8px 0 20px; }
-.login-mascote-img { width:100px; animation:bounce 2s ease-in-out infinite; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5)); }
+.login-mascote-img { width:100px; animation:bounce 2s ease-in-out infinite; mix-blend-mode:screen; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5)); }
 .login-desc { color:var(--texto-sub); font-size:13px; line-height:1.6; margin-bottom:28px; }
 .login-status { color:var(--texto-sub); font-size:13px; min-height:20px; }
 .login-erro {
@@ -128,7 +128,7 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
   border-top:1px solid var(--borda);
   display:flex; align-items:center; gap:10px;
 }
-.mascote-sidebar-img { width:44px; height:44px; object-fit:contain; flex-shrink:0; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
+.mascote-sidebar-img { width:44px; height:44px; object-fit:contain; flex-shrink:0; mix-blend-mode:screen; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }
 .sidebar-mascote-texto { display:flex; flex-direction:column; gap:2px; }
 .sidebar-mascote-texto span { font-size:12px; color:var(--texto-sub); }
 .sidebar-mascote-texto b { color:var(--texto); }
@@ -259,7 +259,8 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
   object-fit:contain; object-position:center bottom;
   flex-shrink:0;
   animation:bounce 2.5s ease-in-out infinite;
-  filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5));
+  mix-blend-mode:screen;
+  filter:drop-shadow(0 4px 16px rgba(0,0,0,0.3));
 }
 
 /* Cards Mini */
@@ -298,7 +299,7 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
 .vermelho-badge { background:rgba(255,77,106,0.15); color:var(--vermelho); }
 .amarelo-badge { background:rgba(255,184,48,0.15); color:var(--amarelo); }
 .estado-body { display:flex; gap:12px; align-items:flex-start; }
-.estado-img { width:50px; height:50px; object-fit:contain; flex-shrink:0; }
+.estado-img { width:50px; height:50px; object-fit:contain; flex-shrink:0; mix-blend-mode:screen; }
 .estado-titulo { font-size:13px; font-weight:600; margin-bottom:4px; }
 .estado-desc { font-size:11px; color:var(--texto-sub); line-height:1.5; }
 
@@ -516,6 +517,23 @@ select option { background:var(--card); }
 .btn-primary:hover { background:var(--verde-dim); transform:translateY(-1px); }
 .btn-secondary { background:var(--card2); color:var(--texto-sub); border:1px solid var(--borda); border-radius:9px; padding:10px 20px; font-size:13px; font-weight:500; cursor:pointer; transition:all 0.2s; }
 .btn-secondary:hover { color:var(--texto); }
+
+
+/* Saldo inicial abaixo do saldo total no dashboard */
+.saldo-inicial-dash {
+  font-size:11px;
+  color:var(--texto-sub);
+  margin-top:4px;
+  margin-bottom:2px;
+  letter-spacing:0.3px;
+}
+
+/* Input moeda — alinha à direita e aparência de valor financeiro */
+input[type=number].moeda {
+  text-align:right;
+  font-weight:600;
+  letter-spacing:0.5px;
+}
 
 /* ============================================================
    TOAST
