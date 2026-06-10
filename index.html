@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MONETO — Seu dinheiro sob controle</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== TELA DE LOGIN ===== -->
+<div id="tela-login">
+  <div class="login-bg">
+    <div class="login-orb login-orb1"></div>
+    <div class="login-orb login-orb2"></div>
+    <div class="login-orb login-orb3"></div>
+  </div>
+  <div class="login-box">
+    <img src="logo.png" alt="MONETO" class="login-logo">
+    <p class="login-sub">Seu dinheiro sob controle.</p>
+    <div class="login-mascote">
+      <img src="mascote_feliz.png" alt="Mascote" class="login-mascote-img">
+    </div>
+    <p class="login-desc">Faça login com sua conta Google para acessar seu painel financeiro.</p>
+    <div id="login-status" class="login-status"></div>
+    <div id="login-erro" class="login-erro" style="display:none">
+      <img src="mascote_triste.png" alt="Sem acesso" style="width:60px">
+      <p>Sua conta não tem permissão de acesso.<br>Entre em contato com o administrador.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loading-screen" style="display:none">
+  <div class="loading-content">
+    <img src="logo.png" alt="MONETO" class="logo-loading-img">
+    <p>Carregando seu painel...</p>
+    <div class="loading-bar"><div class="loading-fill"></div></div>
+  </div>
+</div>
+
+<!-- ===== APP PRINCIPAL ===== -->
+<div id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="MONETO" class="sidebar-logo-img">
+    </div>
+
+    <nav class="sidebar-nav">
+      <button class="snav-btn active" onclick="mudarAba('dashboard')" data-aba="dashboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="snav-btn" onclick="mudarAba('receitas')" data-aba="receitas">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Receitas
+      </button>
+      <button class="snav-btn" onclick="mudarAba('despesas')" data-aba="despesas">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+        Despesas
+      </button>
+      <button class="snav-btn" onclick="mudarAba('cartoes')" data-aba="cartoes">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Cartões
+      </button>
+      <button class="snav-btn" onclick="mudarAba('metas')" data-aba="metas">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Metas
+      </button>
+      <button class="snav-btn" onclick="mudarAba('config')" data-aba="config">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Configurações
+      </button>
+    </nav>
+
+    <!-- Mascote Sidebar -->
+    <div class="sidebar-mascote">
+      <img id="mascote-sidebar" src="mascote_feliz.png" alt="Mascote" class="mascote-sidebar-img">
+      <div class="sidebar-mascote-texto">
+        <span id="sidebar-ola">Olá, <b id="sidebar-nome">Ana</b>!</span>
+        <span id="sidebar-frase" class="sidebar-frase">Vamos juntos alcançar seus objetivos.</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div id="main-wrapper">
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="btn-menu-mobile" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div id="topbar-titulo">Dashboard</div>
+      </div>
+      <div class="topbar-center">
+        <div class="filtro-mes">
+          <button class="btn-mes-nav" onclick="navegarMes(-1)">‹</button>
+          <span id="mes-label">Jun 2026</span>
+          <button class="btn-mes-nav" onclick="navegarMes(1)">›</button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-user">
+          <div class="topbar-avatar" id="topbar-avatar">A</div>
+          <span id="topbar-nome">Ana</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main id="main">
+
+      <!-- ===== DASHBOARD ===== -->
+      <section id="aba-dashboard" class="aba active">
+
+        <div class="dash-greeting">
+          <h1>Olá, <span id="dash-nome">Ana</span>! <span class="wave">👋</span></h1>
+          <p>Seu dinheiro sob controle.</p>
+        </div>
+
+        <!-- Row Principal: Saldo + Cards + Mascote Estado -->
+        <div class="dash-top-row">
+
+          <!-- Card Saldo Grande -->
+          <div class="card card-saldo-hero">
+            <div class="saldo-hero-content">
+              <div class="saldo-hero-label">Saldo total
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:6px;vertical-align:middle;opacity:0.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="saldo-hero-valor" id="saldo-atual">R$ 0,00</div>
+              <div class="saldo-hero-var" id="saldo-var"></div>
+              <div class="saldo-hero-chart">
+                <canvas id="chart-saldo-mini" height="60"></canvas>
+              </div>
+            </div>
+            <img id="mascote-grande" src="mascote_feliz.png" alt="Mascote" class="mascote-hero-img">
+          </div>
+
+          <!-- Cards Resumo -->
+          <div class="dash-resumo-col">
+            <div class="card card-mini card-receita-mini">
+              <div class="card-mini-icon receita-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <div class="card-mini-body">
+                <div class="card-mini-label">Receitas</div>
+                <div class="card-mini-valor verde" id="total-receitas">R$ 0,00</div>
+                <div class="card-mini-var" id="var-receitas"></div>
+              </div>
+            </div>
+            <div class="card card-mini card-despesa-mini">
+              <div class="card-mini-icon despesa-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+              </div>
+              <div class="card-mini-body">
+                <div class="card-mini-label">Despesas</div>
+                <div class="card-mini-valor vermelho" id="total-despesas">R$ 0,00</div>
+                <div class="card-mini-var" id="var-despesas"></div>
+              </div>
+            </div>
+            <div class="card card-mini card-economia-mini">
+              <div class="card-mini-icon economia-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+              </div>
+              <div class="card-mini-body">
+                <div class="card-mini-label">Economia</div>
+                <div class="card-mini-valor azul" id="resultado-mes">R$ 0,00</div>
+                <div class="card-mini-var" id="var-fatura"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel estado mascote (direita) -->
+          <div class="dash-estado-col" id="painel-estado">
+            <div class="estado-card" id="estado-positivo">
+              <div class="estado-badge verde-badge">SALDO POSITIVO</div>
+              <div class="estado-body">
+                <img src="mascote_feliz.png" alt="" class="estado-img">
+                <div>
+                  <div class="estado-titulo">Tudo certo!</div>
+                  <div class="estado-desc">Seu saldo está positivo e você está no caminho certo.</div>
+                </div>
+              </div>
+            </div>
+            <div class="estado-card" id="estado-negativo" style="display:none">
+              <div class="estado-badge vermelho-badge">SALDO NEGATIVO</div>
+              <div class="estado-body">
+                <img src="mascote_triste.png" alt="" class="estado-img">
+                <div>
+                  <div class="estado-titulo">Atenção!</div>
+                  <div class="estado-desc">Seus gastos estão maiores que suas receitas. Vamos organizar isso?</div>
+                </div>
+              </div>
+            </div>
+            <div class="estado-card" id="estado-meta" style="display:none">
+              <div class="estado-badge amarelo-badge">META ALCANÇADA</div>
+              <div class="estado-body">
+                <img src="mascote_feliz.png" alt="" class="estado-img">
+                <div>
+                  <div class="estado-titulo">Meta alcançada!</div>
+                  <div class="estado-desc">Parabéns! Você alcançou sua meta. Continue assim!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Row Inferior: Gráfico Evolução + Próximas Transações + Metas -->
+        <div class="dash-bottom-row">
+
+          <!-- Gráfico Evolução + Categorias -->
+          <div class="dash-chart-col">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-titulo-row">
+                <div class="card-titulo">Evolução do saldo</div>
+                <div class="chart-periodo">Últimos 30 dias</div>
+              </div>
+              <canvas id="chart-evolucao" height="130"></canvas>
+            </div>
+            <div class="card">
+              <div class="card-titulo-row">
+                <div class="card-titulo">Gastos por categoria</div>
+              </div>
+              <div class="cat-chart-wrap">
+                <canvas id="chart-categorias" height="160"></canvas>
+                <div id="legenda-categorias" class="legenda-categorias"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Próximas transações + Metas -->
+          <div class="dash-right-col">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-titulo-row">
+                <div class="card-titulo">Próximas transações</div>
+                <button class="btn-link" onclick="mudarAba('receitas')">Ver todas →</button>
+              </div>
+              <div id="proximas-transacoes"></div>
+            </div>
+            <div class="card">
+              <div class="card-titulo-row">
+                <div class="card-titulo">Metas</div>
+                <button class="btn-link" onclick="mudarAba('metas')">Ver todas →</button>
+              </div>
+              <div id="metas-dashboard"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ===== RECEITAS ===== -->
+      <section id="aba-receitas" class="aba">
+        <div class="aba-header">
+          <h2 class="aba-titulo">Receitas</h2>
+          <div class="filtros-row">
+            <select id="filtro-categoria-rec" onchange="filtrarTransacoes('Receita')">
+              <option value="">Todas as categorias</option>
+            </select>
+            <button class="btn-primary" onclick="abrirModalTipo('Receita')">+ Nova receita</button>
+          </div>
+        </div>
+        <div id="lista-receitas" class="card"></div>
+      </section>
+
+      <!-- ===== DESPESAS ===== -->
+      <section id="aba-despesas" class="aba">
+        <div class="aba-header">
+          <h2 class="aba-titulo">Despesas</h2>
+          <div class="filtros-row">
+            <select id="filtro-categoria-desp" onchange="filtrarTransacoes('Despesa')">
+              <option value="">Todas as categorias</option>
+            </select>
+            <button class="btn-primary" onclick="abrirModalTipo('Despesa')">+ Nova despesa</button>
+          </div>
+        </div>
+        <div id="lista-despesas" class="card"></div>
+      </section>
+
+      <!-- ===== CARTÕES ===== -->
+      <section id="aba-cartoes" class="aba">
+        <div class="aba-header">
+          <h2 class="aba-titulo">Cartões de Crédito</h2>
+          <button class="btn-primary" onclick="abrirModalCartao()">+ Novo cartão</button>
+        </div>
+        <div id="lista-cartoes" class="cards-cartoes"></div>
+        <div class="card" style="margin-top:16px">
+          <div class="card-titulo-row">
+            <div class="card-titulo">Lançamentos do Mês</div>
+            <div class="filtros-row">
+              <select id="filtro-cartao-fatura" onchange="carregarFaturas()">
+                <option value="">Todos os cartões</option>
+              </select>
+              <button class="btn-primary" onclick="abrirModalTipo('Fatura')">+ Lançar no cartão</button>
+            </div>
+          </div>
+          <div id="lista-faturas"></div>
+        </div>
+      </section>
+
+      <!-- ===== METAS ===== -->
+      <section id="aba-metas" class="aba">
+        <div class="aba-header">
+          <h2 class="aba-titulo">Metas Financeiras</h2>
+          <button class="btn-primary" onclick="abrirModalMeta()">+ Nova meta</button>
+        </div>
+        <div id="lista-metas" class="cards-metas"></div>
+      </section>
+
+      <!-- ===== CONFIG ===== -->
+      <section id="aba-config" class="aba">
+        <div class="aba-header">
+          <h2 class="aba-titulo">Configurações</h2>
+        </div>
+        <div class="config-grid">
+          <div class="card">
+            <div class="card-titulo">Saldo Inicial</div>
+            <div class="form-grupo">
+              <label>Valor do saldo inicial (R$)</label>
+              <input type="number" id="config-saldo-inicial" placeholder="0,00" step="0.01">
+            </div>
+            <button class="btn-primary" onclick="salvarSaldoInicial()">Salvar</button>
+          </div>
+          <div class="card">
+            <div class="card-titulo">Categorias</div>
+            <div id="lista-categorias-config"></div>
+            <div class="form-grupo" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="nova-categoria-nome" placeholder="Nova categoria" style="flex:1;min-width:120px">
+              <select id="nova-categoria-tipo" style="flex:1;min-width:100px">
+                <option value="Despesa">Despesa</option>
+                <option value="Receita">Receita</option>
+                <option value="Ambos">Ambos</option>
+              </select>
+              <button class="btn-primary" onclick="adicionarCategoria()">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-titulo">Contas / Carteiras</div>
+            <div id="lista-contas-config"></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /main-wrapper -->
+
+  <!-- FAB -->
+  <button class="fab" onclick="abrirModalRapido()">+</button>
+
+</div><!-- /app -->
+
+<!-- ===== MODAIS ===== -->
+
+<!-- Modal Lançamento -->
+<div class="modal-overlay" id="modal-lancamento">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-lancamento-titulo">Novo Lançamento</h3>
+      <button class="modal-close" onclick="fecharModal('modal-lancamento')">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="trocarTipoModal('Receita')" id="tab-receita">↑ Receita</button>
+      <button class="modal-tab" onclick="trocarTipoModal('Despesa')" id="tab-despesa">↓ Despesa</button>
+      <button class="modal-tab" onclick="trocarTipoModal('Fatura')" id="tab-fatura">▣ Cartão</button>
+    </div>
+    <div class="modal-body">
+      <div id="campos-transacao">
+        <div class="form-grupo">
+          <label>Valor *</label>
+          <input type="number" id="t-valor" placeholder="0,00" step="0.01" min="0.01">
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Data *</label>
+            <input type="date" id="t-data">
+          </div>
+          <div class="form-grupo">
+            <label>Categoria *</label>
+            <select id="t-categoria"></select>
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label>Descrição *</label>
+          <input type="text" id="t-descricao" placeholder="Ex: Salário, Mercado...">
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Recorrência *</label>
+            <select id="t-recorrencia">
+              <option value="Variável">Variável</option>
+              <option value="Fixo">Fixo (replica 12 meses)</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label>Status</label>
+            <select id="t-status">
+              <option value="Confirmado">Confirmado</option>
+              <option value="Pendente">Pendente</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Conta</label>
+            <select id="t-conta"><option value="">Selecionar...</option></select>
+          </div>
+          <div class="form-grupo">
+            <label>Forma de pagamento</label>
+            <select id="t-pagamento">
+              <option value="">Selecionar...</option>
+              <option>Dinheiro</option><option>PIX</option>
+              <option>TED/DOC</option><option>Débito</option>
+              <option>Transferência</option><option>Débito Auto</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label>Observação</label>
+          <input type="text" id="t-observacao" placeholder="Opcional...">
+        </div>
+      </div>
+      <div id="campos-fatura" style="display:none">
+        <div class="form-grupo">
+          <label>Cartão *</label>
+          <select id="f-cartao"></select>
+        </div>
+        <div class="form-grupo">
+          <label>Valor Total *</label>
+          <input type="number" id="f-valor" placeholder="0,00" step="0.01" min="0.01">
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Data da compra *</label>
+            <input type="date" id="f-data">
+          </div>
+          <div class="form-grupo">
+            <label>Parcelas</label>
+            <input type="number" id="f-parcelas" value="1" min="1" max="60">
+          </div>
+        </div>
+        <div class="form-grupo">
+          <label>Descrição *</label>
+          <input type="text" id="f-descricao" placeholder="Ex: Tênis, Jantar...">
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Categoria *</label>
+            <select id="f-categoria"></select>
+          </div>
+          <div class="form-grupo">
+            <label>Responsável</label>
+            <select id="f-responsavel"><option value="">Selecionar...</option></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-grupo">
+            <label>Recorrente?</label>
+            <select id="f-recorrente"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+          </div>
+          <div class="form-grupo">
+            <label>É assinatura?</label>
+            <select id="f-assinatura"><option value="Não">Não</option><option value="Sim">Sim</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal('modal-lancamento')">Cancelar</button>
+      <button class="btn-primary" id="btn-salvar-lancamento" onclick="salvarLancamento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cartão -->
+<div class="modal-overlay" id="modal-cartao">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Cadastrar Cartão</h3>
+      <button class="modal-close" onclick="fecharModal('modal-cartao')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grupo">
+        <label>Nome do cartão *</label>
+        <input type="text" id="c-nome" placeholder="Ex: Nubank, Inter...">
+      </div>
+      <div class="form-row">
+        <div class="form-grupo">
+          <label>Bandeira</label>
+          <select id="c-bandeira">
+            <option>Mastercard</option><option>Visa</option>
+            <option>Elo</option><option>American Express</option><option>Hipercard</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label>Limite (R$)</label>
+          <input type="number" id="c-limite" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grupo">
+          <label>Dia vencimento</label>
+          <input type="number" id="c-vencimento" min="1" max="31" placeholder="10">
+        </div>
+        <div class="form-grupo">
+          <label>Melhor dia de compra</label>
+          <input type="number" id="c-melhordia" min="1" max="31" placeholder="17">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grupo">
+          <label>Responsável 1</label>
+          <input type="text" id="c-resp1" placeholder="Nome">
+        </div>
+        <div class="form-grupo">
+          <label>Responsável 2</label>
+          <input type="text" id="c-resp2" placeholder="Nome (opcional)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal('modal-cartao')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarCartao()">Salvar Cartão</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Meta -->
+<div class="modal-overlay" id="modal-meta">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-meta-titulo">Nova Meta</h3>
+      <button class="modal-close" onclick="fecharModal('modal-meta')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grupo">
+        <label>Nome da meta *</label>
+        <input type="text" id="m-nome" placeholder="Ex: Reserva de emergência">
+      </div>
+      <div class="form-row">
+        <div class="form-grupo">
+          <label>Valor alvo (R$) *</label>
+          <input type="number" id="m-alvo" placeholder="0,00" step="0.01">
+        </div>
+        <div class="form-grupo">
+          <label>Valor atual (R$)</label>
+          <input type="number" id="m-atual" placeholder="0,00" step="0.01">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-grupo">
+          <label>Data início</label>
+          <input type="date" id="m-inicio">
+        </div>
+        <div class="form-grupo">
+          <label>Data limite</label>
+          <input type="date" id="m-limite">
+        </div>
+      </div>
+      <div class="form-grupo">
+        <label>Observação</label>
+        <input type="text" id="m-observacao" placeholder="Opcional...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal('modal-meta')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarMeta()">Salvar Meta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
