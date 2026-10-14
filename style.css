@@ -1,3 +1,21 @@
+.login-status-erro {
+  color: var(--vermelho);
+  font-size: 13px;
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: rgba(255,77,106,0.08);
+  border: 1px solid rgba(255,77,106,0.25);
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Mascote sidebar — blend mode só em fundos escuros dentro do app */
+.mascote-hero-img, .mascote-sidebar-img, .estado-img {
+  mix-blend-mode: screen;
+}
+/* Login mascote: sem blend mode, pois o container pode ter fundo claro */
+.login-mascote-img { mix-blend-mode: normal; }
+
 /* ============================================================
    MONETO — CSS v2 (Sidebar Layout)
    ============================================================ */
@@ -59,7 +77,7 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
 .login-logo { width:200px; margin-bottom:8px; }
 .login-sub { color:var(--texto-sub); font-size:14px; margin-bottom:20px; }
 .login-mascote { margin:8px 0 20px; }
-.login-mascote-img { width:100px; animation:bounce 2s ease-in-out infinite; mix-blend-mode:screen; filter:drop-shadow(0 8px 20px rgba(0,0,0,0.5)); }
+.login-mascote-img { width:100px; animation:bounce 2s ease-in-out infinite; filter:drop-shadow(0 8px 24px rgba(0,0,0,0.6)); }
 .login-desc { color:var(--texto-sub); font-size:13px; line-height:1.6; margin-bottom:28px; }
 .login-status { color:var(--texto-sub); font-size:13px; min-height:20px; }
 .login-erro {
@@ -444,7 +462,7 @@ html, body { background:var(--bg); color:var(--texto); font-family:'Inter',sans-
    CONFIG
    ============================================================ */
 .config-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-.config-lista .config-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--borda); font-size:13px; }
+.config-lista .config-item { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--borda); font-size:13px; gap:8px; }
 .config-item:last-child { border-bottom:none; }
 .tipo-badge { font-size:10px; padding:2px 7px; border-radius:4px; margin-left:8px; }
 .badge-receita { background:rgba(0,229,160,0.15); color:var(--verde); }
