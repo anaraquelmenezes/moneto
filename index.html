@@ -16,18 +16,15 @@
     <div class="login-orb login-orb2"></div>
     <div class="login-orb login-orb3"></div>
   </div>
-  <div class="login-box">
+    <div class="login-box">
     <img src="" data-img="logo" alt="MONETO" class="login-logo">
     <p class="login-sub">Seu dinheiro sob controle.</p>
     <div class="login-mascote">
       <img src="" data-img="feliz" alt="Mascote" class="login-mascote-img">
     </div>
-    <p class="login-desc">Faça login com sua conta Google para acessar seu painel financeiro.</p>
-    <div id="login-status" class="login-status"></div>
-    <div id="login-erro" class="login-erro" style="display:none">
-      <img src="" data-img="triste" alt="Sem acesso" style="width:60px">
-      <p>Sua conta não tem permissão de acesso.<br>Entre em contato com o administrador.</p>
-    </div>
+    <p class="login-desc">Digite suas credenciais para acessar seu painel financeiro.</p>
+    <!-- login-form e form-solicitar são injetados pelo JS (mostrarLogin) -->
+    <div id="login-status" class="login-status" style="margin-top:10px;font-size:13px;text-align:center"></div>
   </div>
 </div>
 
@@ -110,6 +107,10 @@
           <span id="topbar-nome">Ana</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
+        <button onclick="logout()" title="Sair" style="background:none;border:none;cursor:pointer;padding:6px 8px;border-radius:8px;color:var(--text-secondary);display:flex;align-items:center;gap:4px;font-size:13px" onmouseover="this.style.background='rgba(255,77,106,.12)';this.style.color='var(--vermelho)'" onmouseout="this.style.background='none';this.style.color='var(--text-secondary)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sair
+        </button>
       </div>
     </header>
 
@@ -609,6 +610,33 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal('modal-nova-categoria')">Cancelar</button>
       <button class="btn-primary" onclick="salvarNovaCategoriainline()">Criar Categoria</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Trocar Senha -->
+<div class="modal-overlay" id="modal-trocar-senha" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3 id="trocar-senha-titulo">Alterar senha</h3>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
+        Por segurança, defina uma senha pessoal para acessar o MONETO.
+      </p>
+      <div class="form-grupo">
+        <label>Nova senha</label>
+        <input type="password" id="ts-nova" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-grupo" style="margin-top:10px">
+        <label>Confirmar senha</label>
+        <input type="password" id="ts-confirma" placeholder="Repita a nova senha">
+      </div>
+      <div id="ts-status" style="margin-top:10px;font-size:13px;text-align:center"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="trocar-senha-cancelar" onclick="document.getElementById('modal-trocar-senha').style.display='none'">Cancelar</button>
+      <button class="btn-primary" onclick="confirmarTrocarSenha()">Salvar senha</button>
     </div>
   </div>
 </div>
