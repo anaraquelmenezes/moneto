@@ -67,10 +67,14 @@ function mostrarLogin() {
       </div>
       <button onclick="fazerLogin()"
         style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:none;
-               background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer">
+               background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer">
         Entrar
       </button>
-      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-secondary)">
+      <p style="text-align:center;margin-top:10px;font-size:13px">
+        <a href="#" onclick="mostrarFormRecuperacao(event)"
+           style="color:var(--text-secondary);text-decoration:none">Esqueci minha senha</a>
+      </p>
+      <p style="text-align:center;margin-top:6px;font-size:13px;color:var(--text-secondary)">
         Não tem acesso?
         <a href="#" onclick="mostrarFormSolicitacao(event)"
            style="color:var(--accent);text-decoration:none;font-weight:600">Solicitar acesso</a>
@@ -162,12 +166,86 @@ async function entrarNoApp(nome) {
   preencherSelects();
 }
 
+// --- Recuperar senha ---
+function mostrarFormRecuperacao(e) {
+  e && e.preventDefault();
+  const box = document.querySelector('.login-box');
+  const formLogin = document.getElementById('login-form');
+  if (formLogin) formLogin.style.display = 'none';
+  const fs = document.getElementById('form-solicitar');
+  if (fs) fs.style.display = 'none';
+  const statusEl = document.getElementById('login-status');
+  if (statusEl) statusEl.textContent = '';
+
+  if (!document.getElementById('form-recuperar')) {
+    const form = document.createElement('div');
+    form.id = 'form-recuperar';
+    form.style.marginTop = '16px';
+    form.innerHTML = `
+      <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;text-align:center">
+        Informe seu email e enviaremos uma nova senha temporária.
+      </p>
+      <div class="form-grupo">
+        <label style="color:var(--text-secondary);font-size:13px">Seu email</label>
+        <input type="email" id="rec-email" placeholder="seu@email.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+                 background:var(--bg-card);color:var(--text-primary);font-size:14px;box-sizing:border-box;margin-top:4px">
+      </div>
+      <button onclick="enviarRecuperacao()"
+        style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:none;
+               background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer">
+        Enviar nova senha
+      </button>
+      <p style="text-align:center;margin-top:12px;font-size:13px">
+        <a href="#" onclick="voltarParaLogin(event)"
+           style="color:var(--accent);text-decoration:none">← Voltar para o login</a>
+      </p>`;
+    if (statusEl) box.insertBefore(form, statusEl);
+    else box.appendChild(form);
+  } else {
+    document.getElementById('form-recuperar').style.display = 'block';
+  }
+}
+
+async function enviarRecuperacao() {
+  const email = (document.getElementById('rec-email')?.value || '').trim();
+  const statusEl = document.getElementById('login-status');
+
+  if (!email) {
+    if (statusEl) { statusEl.textContent = 'Informe seu email.'; statusEl.style.color = 'var(--vermelho)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Enviando...'; statusEl.style.color = ''; }
+
+  try {
+    const qs = encodeURIComponent(JSON.stringify({ acao: 'recuperarSenha', email }));
+    const res = await fetch(`${API_URL}?dados=${qs}`, { method: 'GET', redirect: 'follow' });
+    const data = JSON.parse(await res.text());
+
+    if (data.erro) {
+      if (statusEl) { statusEl.textContent = data.erro; statusEl.style.color = 'var(--vermelho)'; }
+      return;
+    }
+
+    const fr = document.getElementById('form-recuperar');
+    if (fr) fr.style.display = 'none';
+    if (statusEl) {
+      statusEl.textContent = '✅ Nova senha enviada para seu email! Verifique a caixa de entrada.';
+      statusEl.style.color = 'var(--verde)';
+    }
+  } catch(err) {
+    if (statusEl) { statusEl.textContent = 'Erro de conexão. Tente novamente.'; statusEl.style.color = 'var(--vermelho)'; }
+  }
+}
+
 // --- Solicitar acesso ---
 function mostrarFormSolicitacao(e) {
   e && e.preventDefault();
   const box = document.querySelector('.login-box');
   const formLogin = document.getElementById('login-form');
   if (formLogin) formLogin.style.display = 'none';
+  const fr = document.getElementById('form-recuperar');
+  if (fr) fr.style.display = 'none';
   const statusEl = document.getElementById('login-status');
   if (statusEl) statusEl.textContent = '';
 
@@ -190,7 +268,7 @@ function mostrarFormSolicitacao(e) {
       </div>
       <button onclick="enviarSolicitacao()"
         style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:none;
-               background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer">
+               background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer">
         Solicitar acesso
       </button>
       <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-secondary)">
@@ -207,11 +285,13 @@ function mostrarFormSolicitacao(e) {
 function voltarParaLogin(e) {
   e && e.preventDefault();
   const fs = document.getElementById('form-solicitar');
+  const fr = document.getElementById('form-recuperar');
   const fl = document.getElementById('login-form');
   if (fs) fs.style.display = 'none';
+  if (fr) fr.style.display = 'none';
   if (fl) fl.style.display = 'block';
   const statusEl = document.getElementById('login-status');
-  if (statusEl) statusEl.textContent = '';
+  if (statusEl) { statusEl.textContent = ''; statusEl.style.color = ''; }
 }
 
 async function enviarSolicitacao() {
@@ -282,9 +362,13 @@ async function confirmarTrocarSenha() {
       if (statusEl) { statusEl.textContent = data.erro; statusEl.style.color = 'var(--vermelho)'; }
       return;
     }
+    // Atualiza token se o backend gerou um novo
+    if (data.token) {
+      Estado.token = data.token;
+      sessionStorage.setItem('moneto_token', data.token);
+    }
     sessionStorage.setItem('moneto_primeira_vez', '0');
     document.getElementById('modal-trocar-senha').style.display = 'none';
-    // Se veio do primeiro acesso, ainda precisa entrar no app
     const nome = Estado.usuario?.nome || sessionStorage.getItem('moneto_nome') || 'Usuário';
     await entrarNoApp(nome);
     mostrarToast('Senha definida com sucesso!', 'ok');
@@ -314,7 +398,7 @@ function atualizarNomeUsuario(nome) {
 // ============================================================
 async function chamarAPI(params) {
   // Injeta credenciais automaticamente (exceto login/solicitarAcesso)
-  if (params.acao !== 'login' && params.acao !== 'solicitarAcesso' && Estado.email) {
+  if (params.acao !== 'login' && params.acao !== 'solicitarAcesso' && params.acao !== 'recuperarSenha' && params.acao !== 'redefinirSenha' && Estado.email) {
     params.email = Estado.email;
     params.token = Estado.token;
   }
