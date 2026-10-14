@@ -25,6 +25,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwcY9iAR3_IAl_nDiWMiJ1a
 
 const Estado = {
   usuario: null, mesAtual: '',
+  email: '', token: '',
   config:{}, categorias:[], contas:[], cartoes:[],
   transacoes:[], faturas:[], metas:[],
   dashboard: null, tipoModal:'Receita', editandoId:null,
@@ -46,36 +47,258 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function mostrarLogin() {
   document.getElementById('tela-login').style.display = 'flex';
-  document.getElementById('login-status').textContent = 'Verificando autenticação...';
-  setTimeout(() => inicializar(), 800);
+  // Monta formulário de login dinamicamente dentro de .login-box
+  const box = document.querySelector('.login-box');
+  if (box && !document.getElementById('login-form')) {
+    const form = document.createElement('div');
+    form.id = 'login-form';
+    form.innerHTML = `
+      <div class="form-grupo" style="margin-top:16px">
+        <label style="color:var(--text-secondary);font-size:13px">Email</label>
+        <input type="email" id="login-email" placeholder="seu@email.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+                 background:var(--bg-card);color:var(--text-primary);font-size:14px;box-sizing:border-box;margin-top:4px">
+      </div>
+      <div class="form-grupo" style="margin-top:10px">
+        <label style="color:var(--text-secondary);font-size:13px">Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••••"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+                 background:var(--bg-card);color:var(--text-primary);font-size:14px;box-sizing:border-box;margin-top:4px">
+      </div>
+      <button onclick="fazerLogin()"
+        style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:none;
+               background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer">
+        Entrar
+      </button>
+      <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-secondary)">
+        Não tem acesso?
+        <a href="#" onclick="mostrarFormSolicitacao(event)"
+           style="color:var(--accent);text-decoration:none;font-weight:600">Solicitar acesso</a>
+      </p>`;
+    const statusEl = document.getElementById('login-status');
+    if (statusEl) box.insertBefore(form, statusEl);
+    else box.appendChild(form);
+    form.addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+  }
+  setTimeout(() => inicializar(), 100);
+}
+
+async function fazerLogin() {
+  const emailEl = document.getElementById('login-email');
+  const senhaEl = document.getElementById('login-senha');
+  const statusEl = document.getElementById('login-status');
+  const email = (emailEl?.value || '').trim();
+  const senha = (senhaEl?.value || '').trim();
+
+  if (!email || !senha) {
+    if (statusEl) { statusEl.textContent = 'Preencha email e senha.'; statusEl.style.color = 'var(--vermelho)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Verificando...'; statusEl.style.color = ''; }
+
+  try {
+    const qs = encodeURIComponent(JSON.stringify({ acao: 'login', email, senha }));
+    const res = await fetch(`${API_URL}?dados=${qs}`, { method: 'GET', redirect: 'follow' });
+    const data = JSON.parse(await res.text());
+
+    if (data.erro || !data.sucesso) {
+      if (statusEl) { statusEl.textContent = data.erro || 'Email ou senha incorretos.'; statusEl.style.color = 'var(--vermelho)'; }
+      return;
+    }
+
+    Estado.email = data.usuario.email;
+    Estado.token = data.usuario.token;
+    Estado.usuario = data.usuario;
+
+    sessionStorage.setItem('moneto_email', Estado.email);
+    sessionStorage.setItem('moneto_token', Estado.token);
+    sessionStorage.setItem('moneto_nome', data.usuario.nome || '');
+    sessionStorage.setItem('moneto_primeira_vez', data.primeiraVez ? '1' : '0');
+
+    if (data.primeiraVez) {
+      abrirModalTrocarSenha(true);
+      return;
+    }
+
+    await entrarNoApp(data.usuario.nome || 'Usuário');
+  } catch(err) {
+    console.error('Erro no login:', err);
+    if (statusEl) { statusEl.textContent = 'Erro de conexão. Verifique sua internet.'; statusEl.style.color = 'var(--vermelho)'; }
+  }
 }
 
 async function inicializar() {
+  const email = sessionStorage.getItem('moneto_email');
+  const token = sessionStorage.getItem('moneto_token');
+  const nome  = sessionStorage.getItem('moneto_nome');
+
+  if (!email || !token) return; // sem sessão — fica na tela de login
+
+  Estado.email = email;
+  Estado.token = token;
+
   try {
     const res = await chamarAPI({ acao: 'getUsuario' });
-    if (!res.autorizado) {
-      document.getElementById('login-status').style.display = 'none';
-      document.getElementById('login-erro').style.display = 'flex';
+    if (res.erro) {
+      sessionStorage.clear();
+      Estado.email = '';
+      Estado.token = '';
       return;
     }
-    Estado.usuario = res;
-    document.getElementById('tela-login').style.display = 'none';
-    document.getElementById('loading-screen').style.display = 'flex';
-    await Promise.all([carregarConfig(), carregarCategorias(), carregarContas(), carregarCartoes()]);
-    await carregarDashboard();
-    const nome = res.nome || 'Usuário';
-    atualizarNomeUsuario(nome);
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    preencherSelects();
+    await entrarNoApp(res.usuario?.nome || nome || 'Usuário');
   } catch(err) {
-    console.error('Erro ao inicializar:', err);
-    // NÃO entrar no app sem autenticação confirmada
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('tela-login').style.display = 'flex';
-    const statusEl = document.getElementById('login-status');
-    if (statusEl) statusEl.textContent = 'Erro de conexão. Verifique sua internet e recarregue.';
+    console.error('Erro ao restaurar sessão:', err);
   }
+}
+
+async function entrarNoApp(nome) {
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+  await Promise.all([carregarConfig(), carregarCategorias(), carregarContas(), carregarCartoes()]);
+  await carregarDashboard();
+  atualizarNomeUsuario(nome);
+  document.getElementById('loading-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  preencherSelects();
+}
+
+// --- Solicitar acesso ---
+function mostrarFormSolicitacao(e) {
+  e && e.preventDefault();
+  const box = document.querySelector('.login-box');
+  const formLogin = document.getElementById('login-form');
+  if (formLogin) formLogin.style.display = 'none';
+  const statusEl = document.getElementById('login-status');
+  if (statusEl) statusEl.textContent = '';
+
+  if (!document.getElementById('form-solicitar')) {
+    const form = document.createElement('div');
+    form.id = 'form-solicitar';
+    form.style.marginTop = '16px';
+    form.innerHTML = `
+      <div class="form-grupo">
+        <label style="color:var(--text-secondary);font-size:13px">Seu nome completo</label>
+        <input type="text" id="sol-nome" placeholder="Maria Silva"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+                 background:var(--bg-card);color:var(--text-primary);font-size:14px;box-sizing:border-box;margin-top:4px">
+      </div>
+      <div class="form-grupo" style="margin-top:10px">
+        <label style="color:var(--text-secondary);font-size:13px">Seu email</label>
+        <input type="email" id="sol-email" placeholder="seu@email.com"
+          style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+                 background:var(--bg-card);color:var(--text-primary);font-size:14px;box-sizing:border-box;margin-top:4px">
+      </div>
+      <button onclick="enviarSolicitacao()"
+        style="width:100%;margin-top:16px;padding:12px;border-radius:12px;border:none;
+               background:var(--accent);color:#000;font-weight:700;font-size:15px;cursor:pointer">
+        Solicitar acesso
+      </button>
+      <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-secondary)">
+        <a href="#" onclick="voltarParaLogin(event)"
+           style="color:var(--accent);text-decoration:none">← Voltar para o login</a>
+      </p>`;
+    if (statusEl) box.insertBefore(form, statusEl);
+    else box.appendChild(form);
+  } else {
+    document.getElementById('form-solicitar').style.display = 'block';
+  }
+}
+
+function voltarParaLogin(e) {
+  e && e.preventDefault();
+  const fs = document.getElementById('form-solicitar');
+  const fl = document.getElementById('login-form');
+  if (fs) fs.style.display = 'none';
+  if (fl) fl.style.display = 'block';
+  const statusEl = document.getElementById('login-status');
+  if (statusEl) statusEl.textContent = '';
+}
+
+async function enviarSolicitacao() {
+  const nome  = (document.getElementById('sol-nome')?.value || '').trim();
+  const email = (document.getElementById('sol-email')?.value || '').trim();
+  const statusEl = document.getElementById('login-status');
+
+  if (!nome || !email) {
+    if (statusEl) { statusEl.textContent = 'Preencha nome e email.'; statusEl.style.color = 'var(--vermelho)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Enviando solicitação...'; statusEl.style.color = ''; }
+
+  try {
+    const qs = encodeURIComponent(JSON.stringify({ acao: 'solicitarAcesso', nome, email }));
+    const res = await fetch(`${API_URL}?dados=${qs}`, { method: 'GET', redirect: 'follow' });
+    const data = JSON.parse(await res.text());
+
+    if (data.erro) {
+      if (statusEl) { statusEl.textContent = data.erro; statusEl.style.color = 'var(--vermelho)'; }
+      return;
+    }
+
+    const fs = document.getElementById('form-solicitar');
+    if (fs) fs.style.display = 'none';
+    if (statusEl) {
+      statusEl.textContent = '✅ Solicitação enviada! Você receberá um email quando seu acesso for aprovado.';
+      statusEl.style.color = 'var(--verde)';
+    }
+  } catch(err) {
+    if (statusEl) { statusEl.textContent = 'Erro de conexão. Tente novamente.'; statusEl.style.color = 'var(--vermelho)'; }
+  }
+}
+
+// --- Trocar senha (primeira vez ou manual) ---
+function abrirModalTrocarSenha(obrigatorio) {
+  const modal = document.getElementById('modal-trocar-senha');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const tituloEl = document.getElementById('trocar-senha-titulo');
+  if (tituloEl) {
+    tituloEl.textContent = obrigatorio
+      ? '🔑 Defina sua senha'
+      : 'Alterar senha';
+  }
+  const cancelBtn = document.getElementById('trocar-senha-cancelar');
+  if (cancelBtn) cancelBtn.style.display = obrigatorio ? 'none' : 'inline-block';
+}
+
+async function confirmarTrocarSenha() {
+  const nova    = (document.getElementById('ts-nova')?.value || '').trim();
+  const confirma= (document.getElementById('ts-confirma')?.value || '').trim();
+  const statusEl= document.getElementById('ts-status');
+
+  if (!nova || nova.length < 6) {
+    if (statusEl) { statusEl.textContent = 'A senha deve ter pelo menos 6 caracteres.'; statusEl.style.color = 'var(--vermelho)'; }
+    return;
+  }
+  if (nova !== confirma) {
+    if (statusEl) { statusEl.textContent = 'As senhas não coincidem.'; statusEl.style.color = 'var(--vermelho)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Salvando...'; statusEl.style.color = ''; }
+
+  try {
+    const data = await chamarAPI({ acao: 'trocarSenha', novaSenha: nova });
+    if (data.erro) {
+      if (statusEl) { statusEl.textContent = data.erro; statusEl.style.color = 'var(--vermelho)'; }
+      return;
+    }
+    sessionStorage.setItem('moneto_primeira_vez', '0');
+    document.getElementById('modal-trocar-senha').style.display = 'none';
+    // Se veio do primeiro acesso, ainda precisa entrar no app
+    const nome = Estado.usuario?.nome || sessionStorage.getItem('moneto_nome') || 'Usuário';
+    await entrarNoApp(nome);
+    mostrarToast('Senha definida com sucesso!', 'ok');
+  } catch(err) {
+    if (statusEl) { statusEl.textContent = 'Erro ao salvar senha.'; statusEl.style.color = 'var(--vermelho)'; }
+  }
+}
+
+function logout() {
+  sessionStorage.clear();
+  Estado.email = '';
+  Estado.token = '';
+  Estado.usuario = null;
+  location.reload();
 }
 
 function atualizarNomeUsuario(nome) {
@@ -90,8 +313,11 @@ function atualizarNomeUsuario(nome) {
 // API — usa GET com parâmetro para evitar bloqueio CORS do Apps Script
 // ============================================================
 async function chamarAPI(params) {
-  // Apps Script exige GET para leitura e aceita POST apenas com redirect
-  // Usamos GET com JSON encodado na query string para máxima compatibilidade
+  // Injeta credenciais automaticamente (exceto login/solicitarAcesso)
+  if (params.acao !== 'login' && params.acao !== 'solicitarAcesso' && Estado.email) {
+    params.email = Estado.email;
+    params.token = Estado.token;
+  }
   const qs = encodeURIComponent(JSON.stringify(params));
   const url = `${API_URL}?dados=${qs}`;
   const res = await fetch(url, { method: 'GET', redirect: 'follow' });
@@ -915,11 +1141,3 @@ function mostrarToast(msg,tipo='') {
   setTimeout(()=>el.className='toast',3500);
 }
 
-// Estado global
-const Estado = {
-  usuario:null, mesAtual:'',
-  config:{}, categorias:[], contas:[], cartoes:[],
-  transacoes:[], faturas:[], metas:[],
-  dashboard:null, tipoModal:'Receita', editandoId:null,
-  charts:{}
-};
