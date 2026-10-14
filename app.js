@@ -21,7 +21,7 @@ function inicializarImagens() {
 // ============================================================
 // MONETO — app.js v2
 // ============================================================
-const API_URL = 'https://script.google.com/macros/s/AKfycbwcY9iAR3_IAl_nDiWMiJ1a68s9KETVsgAg9tkUWys-6WdfaLF9awVuqFkNDunf_5XNuQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxQeQV9RIb7WsHbui0yV_Cpq2-5gNTYxGOzQLeP_4mHMdkQiP_RDom4JIkCPzM6rgkGyw/exec';
 
 const Estado = {
   usuario: null, mesAtual: '',
