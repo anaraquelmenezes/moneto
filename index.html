@@ -340,7 +340,7 @@
                 <option value="Receita">Receita</option>
                 <option value="Ambos">Ambos</option>
               </select>
-              <button class="btn-primary" onclick="adicionarCategoria()">+ Adicionar</button>
+              <button class="btn-primary" id="btn-add-categoria" onclick="adicionarCategoria()">+ Adicionar</button>
             </div>
           </div>
           <div class="card">
@@ -385,7 +385,11 @@
           </div>
           <div class="form-grupo">
             <label>Categoria *</label>
-            <select id="t-categoria"></select>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="t-categoria" style="flex:1"></select>
+              <button type="button" class="btn-acao" style="width:auto;padding:0 10px;height:36px;font-size:13px;border-radius:8px;flex-shrink:0" 
+                onclick="abrirModalNovaCategoria(Estado.tipoModal==='Receita'?'Receita':'Despesa', 't-categoria')" title="Nova categoria">+ Cat</button>
+            </div>
           </div>
         </div>
         <div class="form-grupo">
@@ -454,7 +458,11 @@
         <div class="form-row">
           <div class="form-grupo">
             <label>Categoria *</label>
-            <select id="f-categoria"></select>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="f-categoria" style="flex:1"></select>
+              <button type="button" class="btn-acao" style="width:auto;padding:0 10px;height:36px;font-size:13px;border-radius:8px;flex-shrink:0" 
+                onclick="abrirModalNovaCategoria('Despesa', 'f-categoria')" title="Nova categoria">+ Cat</button>
+            </div>
           </div>
           <div class="form-grupo">
             <label>Responsável</label>
@@ -573,6 +581,34 @@
     <div class="modal-footer">
       <button class="btn-secondary" onclick="fecharModal('modal-meta')">Cancelar</button>
       <button class="btn-primary" onclick="salvarMeta()">Salvar Meta</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Nova Categoria (inline nos modais de lançamento) -->
+<div class="modal-overlay" id="modal-nova-categoria">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3>Nova Categoria</h3>
+      <button class="modal-close" onclick="fecharModal('modal-nova-categoria')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grupo">
+        <label>Nome da categoria *</label>
+        <input type="text" id="nc-nome" placeholder="Ex: Alimentação, Saúde...">
+      </div>
+      <div class="form-grupo">
+        <label>Tipo</label>
+        <select id="nc-tipo">
+          <option value="Despesa">Despesa</option>
+          <option value="Receita">Receita</option>
+          <option value="Ambos">Ambos</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="fecharModal('modal-nova-categoria')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarNovaCategoriainline()">Criar Categoria</button>
     </div>
   </div>
 </div>
