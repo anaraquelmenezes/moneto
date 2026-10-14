@@ -69,13 +69,12 @@ async function inicializar() {
     document.getElementById('app').style.display = 'flex';
     preencherSelects();
   } catch(err) {
-    console.error(err);
-    document.getElementById('tela-login').style.display = 'none';
+    console.error('Erro ao inicializar:', err);
+    // NÃO entrar no app sem autenticação confirmada
     document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    atualizarNomeUsuario('Ana');
-    preencherSelects();
-    await carregarDashboard();
+    document.getElementById('tela-login').style.display = 'flex';
+    const statusEl = document.getElementById('login-status');
+    if (statusEl) statusEl.textContent = 'Erro de conexão. Verifique sua internet e recarregue.';
   }
 }
 
@@ -469,12 +468,16 @@ function renderizarCategoriasConfig() {
     const tipo = i===0?['Receita','Ambos']:['Despesa','Ambos'];
     sel.innerHTML='<option value="">Todas as categorias</option>'+Estado.categorias.filter(c=>tipo.includes(c.tipo)).map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
   });
-  // Lista de categorias cadastradas (abaixo do formulário)
+  // Lista de categorias cadastradas com botões editar/excluir
   const c = document.getElementById('lista-categorias-config'); if(!c) return;
   if (Estado.categorias.length===0) { c.innerHTML='<div class="empty-state" style="padding:12px">Nenhuma categoria cadastrada.</div>'; return; }
   c.innerHTML=`<div class="config-lista">${Estado.categorias.map(cat=>`
     <div class="config-item">
       <span>${cat.nome}<span class="tipo-badge badge-${cat.tipo==='Receita'?'receita':cat.tipo==='Despesa'?'despesa':'ambos'}">${cat.tipo}</span></span>
+      <div style="display:flex;gap:4px">
+        <button class="btn-acao" onclick="editarCategoria('${cat.id}')" title="Editar">✎</button>
+        <button class="btn-acao excluir" onclick="excluirCategoria('${cat.id}')" title="Excluir">✕</button>
+      </div>
     </div>`).join('')}</div>`;
 }
 
@@ -762,15 +765,131 @@ async function salvarSaldoInicial() {
   }
 }
 
-async function adicionarCategoria() {
-  const nome = document.getElementById('nova-categoria-nome').value.trim();
-  const tipo = document.getElementById('nova-categoria-tipo').value;
+async function adicionarCategoria(nomeParam, tipoParam) {
+  const nome = nomeParam || document.getElementById('nova-categoria-nome').value.trim();
+  const tipo = tipoParam || document.getElementById('nova-categoria-tipo').value;
+  if(!nome){ mostrarToast('Nome da categoria é obrigatório.','error'); return null; }
+  // Verificar duplicata
+  if(Estado.categorias.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+    mostrarToast('Já existe uma categoria com esse nome.','error'); return null;
+  }
+  const btnEl = document.getElementById('btn-add-categoria');
+  if(btnEl){ btnEl.disabled=true; btnEl.textContent='Salvando...'; }
+  try {
+    const res = await chamarAPI({ acao:'salvarCategoria', nome, tipo });
+    if(res.sucesso || res.id) {
+      const novaCategoria = { id: res.id || 'CAT'+Date.now(), nome, tipo };
+      Estado.categorias.push(novaCategoria);
+      renderizarCategoriasConfig();
+      preencherSelectCategorias();
+      if(!nomeParam) document.getElementById('nova-categoria-nome').value='';
+      mostrarToast('Categoria "'+nome+'" criada com sucesso!','success');
+      return novaCategoria;
+    } else {
+      mostrarToast(res.erro || 'Erro ao salvar categoria.','error');
+      return null;
+    }
+  } catch(e) {
+    // fallback offline: adiciona localmente se API falhar
+    const novaCategoria = { id:'CAT'+Date.now(), nome, tipo };
+    Estado.categorias.push(novaCategoria);
+    renderizarCategoriasConfig();
+    preencherSelectCategorias();
+    if(!nomeParam) document.getElementById('nova-categoria-nome').value='';
+    mostrarToast('Categoria adicionada localmente (sem conexão com servidor).','success');
+    return novaCategoria;
+  } finally {
+    if(btnEl){ btnEl.disabled=false; btnEl.textContent='+ Adicionar'; }
+  }
+}
+
+async function editarCategoria(id) {
+  const cat = Estado.categorias.find(c => c.id === id);
+  if (!cat) return;
+  const novoNome = prompt('Novo nome para a categoria:', cat.nome);
+  if (!novoNome || !novoNome.trim()) return;
+  const novoNomeTrim = novoNome.trim();
+  // Verificar duplicata
+  if(Estado.categorias.find(c => c.nome.toLowerCase() === novoNomeTrim.toLowerCase() && c.id !== id)) {
+    mostrarToast('Já existe uma categoria com esse nome.','error'); return;
+  }
+  try {
+    const res = await chamarAPI({ acao:'editarCategoria', id, nome: novoNomeTrim, tipo: cat.tipo });
+    if(res.sucesso) {
+      cat.nome = novoNomeTrim;
+      renderizarCategoriasConfig();
+      preencherSelectCategorias();
+      mostrarToast('Categoria atualizada!','success');
+    } else {
+      // fallback: atualizar localmente
+      cat.nome = novoNomeTrim;
+      renderizarCategoriasConfig();
+      preencherSelectCategorias();
+      mostrarToast('Categoria atualizada localmente.','success');
+    }
+  } catch(e) {
+    cat.nome = novoNomeTrim;
+    renderizarCategoriasConfig();
+    preencherSelectCategorias();
+    mostrarToast('Categoria atualizada localmente.','success');
+  }
+}
+
+async function excluirCategoria(id) {
+  const cat = Estado.categorias.find(c => c.id === id);
+  if (!cat) return;
+  if (!confirm(`Excluir a categoria "${cat.nome}"? Lançamentos existentes não serão afetados.`)) return;
+  try {
+    const res = await chamarAPI({ acao:'excluirCategoria', id });
+    if(res.sucesso || !res.erro) {
+      Estado.categorias = Estado.categorias.filter(c => c.id !== id);
+      renderizarCategoriasConfig();
+      preencherSelectCategorias();
+      mostrarToast('Categoria excluída!','success');
+    } else {
+      mostrarToast(res.erro || 'Erro ao excluir.','error');
+    }
+  } catch(e) {
+    Estado.categorias = Estado.categorias.filter(c => c.id !== id);
+    renderizarCategoriasConfig();
+    preencherSelectCategorias();
+    mostrarToast('Categoria removida localmente.','success');
+  }
+}
+
+// ============================================================
+// NOVA CATEGORIA INLINE (a partir dos modais de lançamento)
+// ============================================================
+let _categoriaCallback = null; // qual select atualizar após criar
+
+function abrirModalNovaCategoria(tipoSugerido, callbackSelectId) {
+  _categoriaCallback = callbackSelectId || null;
+  document.getElementById('nc-nome').value = '';
+  document.getElementById('nc-tipo').value = tipoSugerido || 'Ambos';
+  abrirModal('modal-nova-categoria');
+}
+
+async function salvarNovaCategoriainline() {
+  const nome = document.getElementById('nc-nome').value.trim();
+  const tipo = document.getElementById('nc-tipo').value;
   if(!nome){ mostrarToast('Nome da categoria é obrigatório.','error'); return; }
-  Estado.categorias.push({id:'CAT'+Date.now(), nome, tipo});
-  renderizarCategoriasConfig();
-  preencherSelectCategorias();
-  document.getElementById('nova-categoria-nome').value='';
-  mostrarToast('Categoria adicionada! Inclua também na aba Categorias da planilha.','success');
+  const btn = document.querySelector('#modal-nova-categoria .btn-primary');
+  if(btn){ btn.disabled=true; btn.textContent='Salvando...'; }
+  const novaCategoria = await adicionarCategoria(nome, tipo);
+  if(btn){ btn.disabled=false; btn.textContent='Criar Categoria'; }
+  if(novaCategoria) {
+    fecharModal('modal-nova-categoria');
+    // Se veio de um select, selecionar a nova categoria nele
+    if(_categoriaCallback) {
+      const sel = document.getElementById(_categoriaCallback);
+      if(sel){
+        const opt = document.createElement('option');
+        opt.value = nome; opt.textContent = nome; opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+    _categoriaCallback = null;
+  }
 }
 
 // ============================================================
